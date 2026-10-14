@@ -11,7 +11,7 @@ export default async function DashboardPage() {
       session.from('shopkeepers').select('*', { count: 'exact', head: true }),
     ])
 
-  const { data: overdueInstallments } = await session
+  const { count: overdueInstallments } = await session
     .from('emi_schedule')
     .select('id', { count: 'exact', head: true })
     .eq('status', 'overdue')
