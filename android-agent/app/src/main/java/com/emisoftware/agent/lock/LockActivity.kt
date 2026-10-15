@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -50,6 +51,21 @@ class LockActivity : ComponentActivity() {
         instance = WeakReference(this)
         enterLockTaskIfPossible()
 
+        // Swallow back — LockTask mode already blocks it, but this is a
+        // deliberate second line of defense if LockTask failed to engage
+        // (e.g. this app isn't Device Owner yet on an older provisioning).
+        // Deliberately never calls through to the default behavior (which
+        // would finish the activity and hand the lock screen's exit to
+        // whoever is holding the phone).
+        onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    // no-op: consume the back press
+                }
+            }
+        )
+
         setContent {
             EmiLockAgentTheme {
                 LockScreen(
@@ -58,12 +74,6 @@ class LockActivity : ComponentActivity() {
                 )
             }
         }
-    }
-
-    override fun onBackPressed() {
-        // Swallow back — LockTask mode already blocks it, but this is a
-        // deliberate second line of defense if LockTask failed to engage
-        // (e.g. this app isn't Device Owner yet on an older provisioning).
     }
 
     private fun enterLockTaskIfPossible() {
