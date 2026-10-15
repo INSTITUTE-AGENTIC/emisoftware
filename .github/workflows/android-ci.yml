@@ -46,3 +46,13 @@ jobs:
 
       - name: Lint
         run: ./gradlew :app:lintDebug --no-daemon
+
+      # So a lint failure's full report is readable afterward instead of
+      # just Gradle's truncated "first failure" console summary — this bit
+      # us once already (2 of 3 errors were never visible in the console).
+      - name: Upload lint report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: android-agent/app/build/reports/lint-results-debug.html

@@ -49,9 +49,13 @@ object ApiClient {
                 customerName = body.optString("customer_name"),
                 emiAmount = body.optDouble("emi_amount", 0.0),
                 emiCount = body.optInt("emi_count", 0),
-                shopName = body.optString("shop_name", null),
-                shopPhone = body.optString("shop_phone", null),
-                nextPaymentLinkUrl = next?.optString("razorpay_payment_link_url", null),
+                // org.json's optString(key, fallback) takes a non-null fallback on
+                // Android's platform-annotated SDK — passing null compiled with a
+                // warning here (and could NPE on-device). optString(key) returns ""
+                // when absent, never null, so empty-to-null is the correct translation.
+                shopName = body.optString("shop_name").ifEmpty { null },
+                shopPhone = body.optString("shop_phone").ifEmpty { null },
+                nextPaymentLinkUrl = next?.optString("razorpay_payment_link_url")?.ifEmpty { null },
             )
         }
     }

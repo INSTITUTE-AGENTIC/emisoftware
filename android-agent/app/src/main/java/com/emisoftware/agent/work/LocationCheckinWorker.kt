@@ -1,6 +1,7 @@
 package com.emisoftware.agent.work
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
@@ -49,6 +50,10 @@ class LocationCheckinWorker(appContext: Context, params: WorkerParameters) : Cor
         }
     }
 
+    // Lint's MissingPermission check can't see across the call into doWork(),
+    // which already gates every call here behind hasLocationPermission —
+    // suppressing the false positive rather than restructuring real logic.
+    @SuppressLint("MissingPermission")
     private suspend fun fetchLocation() = runCatching {
         val client = LocationServices.getFusedLocationProviderClient(applicationContext)
         withTimeoutOrNull(20_000) {
