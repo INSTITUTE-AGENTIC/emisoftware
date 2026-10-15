@@ -75,7 +75,7 @@ class AgentFirebaseMessagingService : FirebaseMessagingService() {
         unlock()
         val dpm = dpm() ?: return
         if (dpm.isDeviceOwnerApp(packageName)) {
-            dpm.clearDeviceOwnerApp()
+            dpm.clearDeviceOwnerApp(packageName)
         }
     }
 
