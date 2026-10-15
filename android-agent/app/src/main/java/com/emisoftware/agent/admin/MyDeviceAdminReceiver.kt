@@ -5,6 +5,7 @@ import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.os.UserManager
 import com.emisoftware.agent.data.DeviceConfig
 import kotlinx.coroutines.runBlocking
 
@@ -33,6 +34,16 @@ class MyDeviceAdminReceiver : DeviceAdminReceiver() {
         val dpm = context.getSystemService(DevicePolicyManager::class.java)
         val admin = ComponentName(context, MyDeviceAdminReceiver::class.java)
         dpm.setLockTaskPackages(admin, arrayOf(context.packageName))
+
+        // Anti-tamper hardening — closes every reset/removal path Android's
+        // policy API can actually close. See android-agent/README.md
+        // ("What a factory reset can and can't do to this app") for the one
+        // path it cannot close: a hardware recovery-mode wipe.
+        dpm.setUninstallBlocked(admin, context.packageName, true)
+        dpm.addUserRestriction(admin, UserManager.DISALLOW_FACTORY_RESET)
+        dpm.addUserRestriction(admin, UserManager.DISALLOW_SAFE_BOOT)
+        dpm.addUserRestriction(admin, UserManager.DISALLOW_DEBUGGING_FEATURES)
+        dpm.addUserRestriction(admin, UserManager.DISALLOW_MODIFY_ACCOUNTS)
     }
 
     companion object {

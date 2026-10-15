@@ -28,7 +28,12 @@ export default async function DeviceDetailPage({ params }: { params: { id: strin
             {device.model} · IMEI {device.imei} · Sold by {device.shopkeepers?.shop_name ?? '—'}
           </p>
         </div>
-        <DeviceControls deviceId={device.id} status={device.status} />
+        <DeviceControls
+          deviceId={device.id}
+          status={device.status}
+          imei={device.imei}
+          flaggedStolen={device.flagged_stolen}
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">

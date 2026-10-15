@@ -14,6 +14,66 @@ host is blocked by its network policy), so this is the first point
 where the project actually gets a verified build rather than a
 by-hand read-through. Check that workflow's run after pushing.
 
+## What a factory reset can and can't do to this app
+
+This matters more than almost anything else here — a reset that erases
+the lock app erases the whole business model. Read this before telling
+the client what's protected.
+
+**Blocked completely — reset from within Settings ("Erase all data" /
+"Factory data reset" in the Settings app):** `MyDeviceAdminReceiver`
+sets `UserManager.DISALLOW_FACTORY_RESET` as a Device Owner restriction
+at provisioning time. The option disappears from Settings entirely.
+Also blocked the same way: Safe Mode boot (a route to temporarily
+disable this app's receivers while leaving the OS intact), USB
+debugging, and removing the Google account that FRP depends on.
+`setUninstallBlocked` additionally stops the app being uninstalled
+through the OS.
+
+**NOT blocked — a hardware recovery-mode wipe** (holding
+Volume+Power into the bootloader/recovery menu and choosing "wipe data
+/ factory reset" there, or `fastboot -w`/`fastboot erase userdata` from
+a PC with USB debugging... which is itself blocked above, but a locked
+bootloader's stock recovery menu doesn't need debugging enabled at
+all). That wipes the data partition — every app including this one —
+before Android and its Device Owner policies are even running. **No
+app can prevent this.** It is not a bug in this implementation; it is
+true of every MDM and every commercial EMI-lock product (Chimera,
+MobiLock, etc.) on the market, because it happens below the OS layer
+that any of them run in.
+
+What actually limits this attack in practice, in order of how much
+they help:
+
+1. **A locked bootloader** (the default on virtually every phone sold
+   in India) makes `fastboot -w` refuse to run without first enabling
+   OEM unlocking from Developer Options — which `DISALLOW_DEBUGGING_FEATURES`
+   above blocks access to on most OEM skins. The stock recovery-menu wipe
+   (no bootloader unlock needed) still works regardless; this only
+   closes the `fastboot` variant of the attack.
+2. **Factory Reset Protection (FRP)** — built into Android automatically
+   whenever a Google account is signed in. After *any* reset (recovery
+   or Settings), the device demands sign-in with a Google account that
+   was previously on it before setup can complete. It doesn't bring the
+   app back, but it makes the reset phone useless to a casual reseller.
+   FRP bypass tools exist and work on some OEM/Android-version
+   combinations, more often on older/budget phones — don't oversell this
+   as unbeatable either.
+3. **IMEI blacklisting (CEIR)** — the real backstop once a device is
+   confirmed gone. The admin panel's device page has a "Flag for IMEI
+   block" action (`flagged_stolen` on the `devices` table) — it only
+   records the flag; actually submitting the IMEI happens manually at
+   `ceir.sancharsaathi.gov.in`. Once blacklisted, the phone can't
+   register on any Indian telecom network, reset or not. This is the
+   step that actually recovers the loss, not an app feature — make it
+   part of the shopkeeper/distributor process for any device that goes
+   dark after a reset.
+
+Tell the client this plainly: the lock deters casual non-payment and
+makes a reset the clear signal that a device has gone bad, but the
+money-recovery step for a determined thief is CEIR reporting, not the
+app. Anyone pitching 100% reset-proof software is overselling it.
+
 ## What's here
 
 ```
