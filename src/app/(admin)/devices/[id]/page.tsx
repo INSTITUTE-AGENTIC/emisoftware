@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { supabaseServer } from '@/lib/supabase-server'
 import DeviceControls from './device-controls'
+import PaymentLinkButton from './payment-link-button'
 
 export default async function DeviceDetailPage({ params }: { params: { id: string } }) {
   const session = supabaseServer()
@@ -33,14 +34,21 @@ export default async function DeviceDetailPage({ params }: { params: { id: strin
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Stat label="Status" value={device.status} />
         <Stat label="EMI" value={`₹${device.emi_amount} × ${device.emi_count}`} />
-        <Stat
-          label="Last location"
-          value={
-            device.last_lat
-              ? `${device.last_lat.toFixed(4)}, ${device.last_lng.toFixed(4)}`
-              : 'No ping yet'
-          }
-        />
+        <div className="rounded-lg border bg-white p-4 shadow-sm">
+          <p className="text-xs text-slate-500">Last location</p>
+          {device.last_lat ? (
+            <a
+              href={`https://www.google.com/maps?q=${device.last_lat},${device.last_lng}`}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-1 block font-medium text-blue-700 hover:underline"
+            >
+              {device.last_lat.toFixed(4)}, {device.last_lng.toFixed(4)}
+            </a>
+          ) : (
+            <p className="mt-1 font-medium">No ping yet</p>
+          )}
+        </div>
         <Stat
           label="Last seen"
           value={device.last_location_at ? new Date(device.last_location_at).toLocaleString() : 'never'}
@@ -58,6 +66,7 @@ export default async function DeviceDetailPage({ params }: { params: { id: strin
                 <th className="px-4 py-2">Amount</th>
                 <th className="px-4 py-2">Status</th>
                 <th className="px-4 py-2">Paid</th>
+                <th className="px-4 py-2">Collect</th>
               </tr>
             </thead>
             <tbody>
@@ -68,6 +77,16 @@ export default async function DeviceDetailPage({ params }: { params: { id: strin
                   <td className="px-4 py-2">₹{s.amount}</td>
                   <td className="px-4 py-2 capitalize">{s.status}</td>
                   <td className="px-4 py-2">{s.paid_at ? new Date(s.paid_at).toLocaleDateString() : '—'}</td>
+                  <td className="px-4 py-2">
+                    {s.status !== 'paid' && (
+                      <PaymentLinkButton
+                        deviceId={device.id}
+                        installmentNo={s.installment_no}
+                        customerPhone={device.customer_phone}
+                        existingUrl={s.razorpay_payment_link_url}
+                      />
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

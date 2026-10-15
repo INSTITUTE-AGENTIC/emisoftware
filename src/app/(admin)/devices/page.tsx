@@ -16,7 +16,12 @@ export default async function DevicesPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold">Devices</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Devices</h1>
+        <Link href="/devices/new" className="rounded bg-slate-900 px-4 py-2 text-sm text-white">
+          + Finance a device
+        </Link>
+      </div>
       <div className="overflow-hidden rounded-lg border bg-white shadow-sm">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 text-left text-slate-500">
