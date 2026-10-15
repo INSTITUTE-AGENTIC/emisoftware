@@ -4,9 +4,11 @@ on:
   push:
     paths:
       - 'android-agent/**'
+      - '.github/workflows/android-ci.yml'
   pull_request:
     paths:
       - 'android-agent/**'
+      - '.github/workflows/android-ci.yml'
 
 jobs:
   build:
@@ -22,7 +24,18 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - uses: android-actions/setup-android@v3
+      # GitHub's ubuntu-latest image ships an Android SDK preinstalled at
+      # $ANDROID_HOME. The android-actions/setup-android@v3 action was tried
+      # here first and failed — it unconditionally runs `sdkmanager tools`,
+      # installing a legacy package Google removed from the SDK repository
+      # years ago, which makes that action hard-fail on any current SDK
+      # index. Using the preinstalled SDK directly avoids it.
+      - name: Ensure required SDK packages are installed
+        run: |
+          SDKMANAGER=$(find "$ANDROID_HOME" -name sdkmanager -type f | sort -V | tail -1)
+          echo "Using $SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
       # No google-services.json is committed (see android-agent/.gitignore) —
       # the app/build.gradle.kts applies the Google Services plugin only
