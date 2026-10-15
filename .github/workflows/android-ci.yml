@@ -1,0 +1,35 @@
+name: Android agent build
+
+on:
+  push:
+    paths:
+      - 'android-agent/**'
+  pull_request:
+    paths:
+      - 'android-agent/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android-agent
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      # No google-services.json is committed (see android-agent/.gitignore) —
+      # the app/build.gradle.kts applies the Google Services plugin only
+      # when that file exists, so debug assembly works without Firebase
+      # configured. This CI run is a compile/lint check, not a release build.
+      - name: Assemble debug APK
+        run: ./gradlew :app:assembleDebug --no-daemon
+
+      - name: Lint
+        run: ./gradlew :app:lintDebug --no-daemon

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Policies this app uses once provisioned as Device Owner. Device Owner
+  grants the full policy set automatically — this file is what the OS
+  shows the user on the (skipped, for Device Owner) consent screen, and
+  documents intent for anyone reviewing the app later.
+-->
+<device-admin xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-policies>
+        <wipe-data />
+    </uses-policies>
+</device-admin>

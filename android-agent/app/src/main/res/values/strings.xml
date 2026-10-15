@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">EMI Protect</string>
+    <string name="lock_title">Payment Overdue</string>
+    <string name="lock_contact_shop">Contact shop</string>
+    <string name="lock_pay_now">Pay now</string>
+    <string name="lock_check_again">I\'ve paid — recheck</string>
+</resources>
