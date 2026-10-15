@@ -8,7 +8,10 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <!-- No CALL_PHONE: the "Call shop" button uses ACTION_DIAL (opens the
+         dialer for the customer to tap call themselves), which needs no
+         permission. ACTION_CALL — direct, silent dialing — would need it,
+         and was never what this button does. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
