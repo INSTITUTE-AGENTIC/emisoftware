@@ -13,3 +13,5 @@ No API key and no login — it uses YouTube's public channel pages and RSS feeds
 Builds automatically on push via GitHub Actions; the signed APK is attached to a release.
 
 Designed by [Himanshu Khandelwal](https://himanshukhandelwal.in).
+
+FocusTube is an independent app and is not affiliated with, endorsed by, or sponsored by YouTube or Google LLC. YouTube is a trademark of Google LLC.

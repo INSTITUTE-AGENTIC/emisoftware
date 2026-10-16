@@ -359,6 +359,12 @@ private fun DesignerCredit(onClick: () -> Unit) {
             Spacer(Modifier.height(2.dp))
             Text("himanshukhandelwal.in ↗", color = HV.Mint.copy(alpha = 0.7f), fontSize = 11.sp)
         }
+        Spacer(Modifier.height(10.dp))
+        Text(
+            "Independent app · not affiliated with YouTube or Google",
+            color = HV.Faint, fontSize = 10.sp, textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 24.dp),
+        )
     }
 }
 
