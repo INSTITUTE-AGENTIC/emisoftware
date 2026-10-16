@@ -73,7 +73,7 @@ object Notifier {
         val b = NotificationCompat.Builder(ctx, CHANNEL)
             .setSmallIcon(R.drawable.ic_stat)
             .setColor(0xFF2F7A55.toInt())
-            .setContentTitle("${v.channelName} uploaded · FocusTube")
+            .setContentTitle("${v.channelName} uploaded")
             .setContentText(v.title)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
@@ -99,6 +99,13 @@ object Notifier {
 class FeedWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+        // Look for app updates at most every 6 hours
+        val prefs = applicationContext.getSharedPreferences("hv", Context.MODE_PRIVATE)
+        if (System.currentTimeMillis() - prefs.getLong("update_checked", 0) > 6 * 3_600_000L) {
+            prefs.edit().putLong("update_checked", System.currentTimeMillis()).apply()
+            runCatching { Updater.notifyIfNew(applicationContext) }
+        }
+
         val store = Store(applicationContext)
         val creators = store.creators()
         if (creators.isEmpty()) return@withContext Result.success()

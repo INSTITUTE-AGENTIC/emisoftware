@@ -18,6 +18,9 @@ data class UiState(
     val videos: List<Video> = emptyList(),
     val refreshing: Boolean = false,
     val error: String? = null,
+    val update: UpdateInfo? = null,
+    val updateProgress: Float? = null,
+    val updateError: String? = null,
 )
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
@@ -26,7 +29,43 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val state = _state.asStateFlow()
     private var refreshJob: Job? = null
 
-    init { refresh() }
+    init {
+        refresh()
+        checkUpdate()
+    }
+
+    fun checkUpdate() {
+        viewModelScope.launch {
+            val u = Updater.check()
+            if (u != null) _state.update { it.copy(update = u) }
+        }
+    }
+
+    fun dismissUpdate() { _state.update { it.copy(update = null, updateError = null) } }
+
+    fun installUpdate() {
+        val u = _state.value.update ?: return
+        if (_state.value.updateProgress != null) return
+        val app = getApplication<Application>()
+        if (!Updater.canInstall(app)) {
+            Updater.openInstallPermission(app)
+            _state.update { it.copy(updateError = "Allow FocusTube to install updates, then come back and tap Update again.") }
+            return
+        }
+        viewModelScope.launch {
+            _state.update { it.copy(updateProgress = 0f, updateError = null) }
+            try {
+                Updater.downloadAndInstall(app, u) { p -> _state.update { it.copy(updateProgress = p) } }
+                _state.update { it.copy(updateProgress = 1f) }
+            } catch (e: Exception) {
+                _state.update { it.copy(updateProgress = null, updateError = e.message ?: "Update failed. Try again.") }
+                return@launch
+            }
+            // Installer is now on screen; reset so the button is usable if they cancel.
+            kotlinx.coroutines.delay(4000)
+            _state.update { it.copy(updateProgress = null) }
+        }
+    }
 
     fun reloadCache() {
         _state.update { it.copy(creators = store.creators(), videos = store.cachedFeed()) }

@@ -178,6 +178,16 @@ fun AppRoot(
         ) {
             WebScreen(url = DESIGNER_SITE, onClose = { showSite = false })
         }
+
+        s.update?.let { u ->
+            UpdateOverlay(
+                info = u,
+                progress = s.updateProgress,
+                error = s.updateError,
+                onUpdate = vm::installUpdate,
+                onLater = vm::dismissUpdate,
+            )
+        }
     }
 
     if (showAdd) {

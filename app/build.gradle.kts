@@ -9,19 +9,26 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.himanshu.videos"
+        applicationId = "in.himanshukhandelwal.focustube"
         minSdk = 26
         targetSdk = 35
         versionCode = (System.getenv("BUILD_NUMBER") ?: "1").toInt()
         versionName = "1.0." + (System.getenv("BUILD_NUMBER") ?: "1")
+        // Where the app looks for new versions (GitHub releases of this repo, tags "focustube-v<N>")
+        buildConfigField("String", "UPDATE_REPO", "\"" + (System.getenv("UPDATE_REPO") ?: "INSTITUTE-AGENTIC/emisoftware") + "\"")
+        buildConfigField("String", "UPDATE_TAG_PREFIX", "\"focustube-v\"")
+        // Self-updating is not allowed on Google Play — set SELF_UPDATE=false for a Play build
+        buildConfigField("boolean", "SELF_UPDATE", System.getenv("SELF_UPDATE") ?: "true")
     }
 
     signingConfigs {
         create("hv") {
             storeFile = rootProject.file("release.jks")
-            storePassword = "hvsign2026"
-            keyAlias = "hv"
-            keyPassword = "hvsign2026"
+            // Real key + password come from GitHub secrets; never commit them.
+            val pw = System.getenv("KEY_PASSWORD")?.takeIf { it.isNotBlank() } ?: "hvsign2026"
+            storePassword = pw
+            keyAlias = System.getenv("KEY_ALIAS")?.takeIf { it.isNotBlank() } ?: "hv"
+            keyPassword = pw
         }
     }
 
@@ -39,7 +46,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
     lint {
         checkReleaseBuilds = false
         abortOnError = false

@@ -4,6 +4,15 @@ on:
   push:
     branches: [himanshus-videos]
   workflow_dispatch:
+    inputs:
+      notes:
+        description: "What's new (shown to users in the update popup)"
+        required: false
+        default: ""
+      required:
+        description: "Force everyone on older versions to update before using the app"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -23,16 +32,45 @@ jobs:
         with:
           gradle-version: '8.11.1'
 
+      # Production builds are signed with the private key stored in repo secrets
+      # (FOCUSTUBE_KEYSTORE = base64 of the .jks, FOCUSTUBE_KEY_PASSWORD).
+      # Without them, a DEV build is signed with the public test key: never share those.
       - name: Restore signing key
-        run: base64 -d keystore.b64 > release.jks
+        env:
+          KS: ${{ secrets.FOCUSTUBE_KEYSTORE }}
+          PW: ${{ secrets.FOCUSTUBE_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KS" ] && [ -n "$PW" ]; then
+            echo "$KS" | base64 -d > release.jks
+            echo "KEY_ALIAS=focustube" >> "$GITHUB_ENV"
+            echo "KEY_PASSWORD=$PW" >> "$GITHUB_ENV"
+            echo "CHANNEL=release" >> "$GITHUB_ENV"
+          else
+            base64 -d keystore.b64 > release.jks
+            echo "CHANNEL=dev" >> "$GITHUB_ENV"
+            echo "::warning::Signing secrets not set: this is a DEV build signed with the public test key. Don't distribute it."
+          fi
 
       - name: Build release APK
         env:
           BUILD_NUMBER: ${{ github.run_number }}
+          UPDATE_REPO: ${{ github.repository }}
         run: gradle :app:assembleRelease --no-daemon --stacktrace
 
       - name: Rename APK
         run: cp app/build/outputs/apk/release/app-release.apk FocusTube.apk
+
+      - name: Write release notes
+        env:
+          NOTES: ${{ inputs.notes || github.event.head_commit.message }}
+          REQUIRED: ${{ inputs.required && '[required]' || '' }}
+        run: |
+          {
+            echo "$NOTES" | head -n 12
+            echo
+            if [ "$CHANNEL" = "dev" ]; then echo "DEV build (test key), do not distribute."; fi
+            echo "$REQUIRED"
+          } > notes.md
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
@@ -40,6 +78,7 @@ jobs:
           tag_name: focustube-v${{ github.run_number }}
           name: "FocusTube v1.0.${{ github.run_number }}"
           target_commitish: ${{ github.sha }}
-          prerelease: true
+          prerelease: ${{ env.CHANNEL == 'dev' }}
+          make_latest: ${{ env.CHANNEL == 'release' }}
           files: FocusTube.apk
-          body: "Download FocusTube.apk below and install it on your phone."
+          body_path: notes.md
