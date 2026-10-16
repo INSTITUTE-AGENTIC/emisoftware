@@ -73,7 +73,7 @@ object Notifier {
         val b = NotificationCompat.Builder(ctx, CHANNEL)
             .setSmallIcon(R.drawable.ic_stat)
             .setColor(0xFF2F7A55.toInt())
-            .setContentTitle("${v.channelName} uploaded")
+            .setContentTitle("${v.channelName} uploaded · FocusTube")
             .setContentText(v.title)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)

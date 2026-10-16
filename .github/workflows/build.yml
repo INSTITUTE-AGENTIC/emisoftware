@@ -1,4 +1,4 @@
-name: Build Himanshu's Videos APK
+name: Build FocusTube APK
 
 on:
   push:
@@ -32,14 +32,14 @@ jobs:
         run: gradle :app:assembleRelease --no-daemon --stacktrace
 
       - name: Rename APK
-        run: cp app/build/outputs/apk/release/app-release.apk HimanshusVideos.apk
+        run: cp app/build/outputs/apk/release/app-release.apk FocusTube.apk
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: himanshus-videos-v${{ github.run_number }}
-          name: "Himanshu's Videos v1.0.${{ github.run_number }}"
+          tag_name: focustube-v${{ github.run_number }}
+          name: "FocusTube v1.0.${{ github.run_number }}"
           target_commitish: ${{ github.sha }}
           prerelease: true
-          files: HimanshusVideos.apk
-          body: "Download HimanshusVideos.apk below and install it on your phone."
+          files: FocusTube.apk
+          body: "Download FocusTube.apk below and install it on your phone."

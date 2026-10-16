@@ -74,8 +74,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -99,6 +103,7 @@ fun AppRoot(
     var filterCreator by rememberSaveable { mutableStateOf<String?>(null) }
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var toRemove by remember { mutableStateOf<Creator?>(null) }
+    var showSite by rememberSaveable { mutableStateOf(false) }
 
     val notifPerm = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
     LaunchedEffect(Unit) {
@@ -127,6 +132,7 @@ fun AppRoot(
             onPlay = { playing = it; lastPlaying = it },
             onLongPressCreator = { toRemove = it },
             onAdd = { addPrefill = ""; showAdd = true },
+            onOpenSite = { showSite = true },
         )
 
         // Floating "+" — glass orb, bottom right
@@ -163,6 +169,14 @@ fun AppRoot(
                     onPlay = { playing = it; lastPlaying = it },
                 )
             }
+        }
+
+        AnimatedVisibility(
+            visible = showSite,
+            enter = slideInVertically(tween(380)) { it } + fadeIn(tween(250)),
+            exit = slideOutVertically(tween(320)) { it } + fadeOut(tween(250)),
+        ) {
+            WebScreen(url = DESIGNER_SITE, onClose = { showSite = false })
         }
     }
 
@@ -206,6 +220,7 @@ private fun FeedScreen(
     onPlay: (String) -> Unit,
     onLongPressCreator: (Creator) -> Unit,
     onAdd: () -> Unit,
+    onOpenSite: () -> Unit,
 ) {
     val shown = remember(s.videos, filterCreator, tab) {
         s.videos.filter { v ->
@@ -265,6 +280,8 @@ private fun FeedScreen(
             items(shown, key = { it.id }) { v ->
                 VideoCard(v, creatorMap[v.channelId], onClick = { onPlay(v.id) })
             }
+
+            item { DesignerCredit(onOpenSite) }
         }
     }
 }
@@ -283,9 +300,12 @@ private fun Header(s: UiState) {
         )
         Spacer(Modifier.height(6.dp))
         Text(
-            "Himanshu's\nVideos",
-            color = HV.Text, fontSize = 44.sp, lineHeight = 44.sp,
-            fontWeight = FontWeight.ExtraBold, letterSpacing = (-1.8).sp,
+            buildAnnotatedString {
+                append("Focus")
+                withStyle(SpanStyle(color = HV.Mint)) { append("Tube") }
+            },
+            color = HV.Text, fontSize = 48.sp, lineHeight = 50.sp,
+            fontWeight = FontWeight.ExtraBold, letterSpacing = (-2).sp,
         )
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -293,6 +313,41 @@ private fun Header(s: UiState) {
             Spacer(Modifier.width(8.dp))
             val today = s.videos.count { System.currentTimeMillis() - it.published < DAY }
             Pill(if (today > 0) "$today new today" else "${s.videos.size} videos", accent = today > 0)
+        }
+    }
+}
+
+/** "Designed by Himanshu Khandelwal" signature — tapping opens his site inside the app. */
+@Composable
+private fun DesignerCredit(onClick: () -> Unit) {
+    Column(
+        Modifier.fillMaxWidth().padding(top = 36.dp, bottom = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            Modifier.width(36.dp).height(1.dp)
+                .background(Brush.horizontalGradient(listOf(Color.Transparent, HV.Faint, Color.Transparent)))
+        )
+        Spacer(Modifier.height(18.dp))
+        Column(
+            Modifier
+                .clip(RoundedCornerShape(16.dp))
+                .clickable(onClick = onClick)
+                .padding(horizontal = 20.dp, vertical = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                "DESIGNED BY",
+                color = HV.Faint, fontSize = 10.sp, letterSpacing = 3.sp, fontWeight = FontWeight.SemiBold,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Himanshu Khandelwal",
+                color = HV.Sub, fontSize = 15.sp, fontWeight = FontWeight.Bold,
+                letterSpacing = (-0.2).sp, textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(2.dp))
+            Text("himanshukhandelwal.in ↗", color = HV.Mint.copy(alpha = 0.7f), fontSize = 11.sp)
         }
     }
 }
